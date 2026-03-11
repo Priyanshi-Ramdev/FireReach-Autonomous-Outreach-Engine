@@ -2,6 +2,14 @@
 
 FireReach is an AI-powered autonomous GTM outreach agent that automates the workflow of SDRs by capturing live company signals, analyzing alignment with your Ideal Customer Profile (ICP), and drafting hyper-personalized outreach emails.
 
+🌐 Live Demo
+
+Frontend:
+https://firereach-frontend.netlify.app/
+
+Backend API:
+https://firereach-autonomous-outreach-engine.onrender.com
+
 ## Tech Stack
 - **Backend**: FastAPI, LangChain, Groq/Gemini, Serper API, Resend.
 - **Frontend**: React, Vite, TailwindCSS, Framer Motion, Lucide React.
@@ -59,8 +67,14 @@ FireReach is an AI-powered autonomous GTM outreach agent that automates the work
 4. Start Command: `uvicorn main:app --host 0.0.0.0 --port $PORT`
 5. Add the necessary Environment Variables.
 
-**Frontend (Vercel):**
-1. Connect your repository to Vercel.
+**Frontend (Netlify):**
+1. Connect your repository to Netlify.
 2. Set the Root Directory to `frontend`.
-3. Vercel will automatically detect Vite. Build command: `npm run build`.
-4. Add `VITE_API_URL` pointing to your Render backend URL in the Vercel variables.
+3.Set the **Build Command**: 
+4. Set the **Publish Directory**:
+
+5. Add the following **Environment Variable** in Netlify:
+
+6. Deploy the project.
+
+Your frontend will be available at your Netlify domain after deployment.
