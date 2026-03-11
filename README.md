@@ -8,7 +8,7 @@ Frontend:
 https://firereach-frontend.netlify.app/
 
 Backend API:
-https://firereach-autonomous-outreach-engine.onrender.com
+https://firereach-autonomous-outreach-engine.onrender.com/docs
 
 ## Tech Stack
 - **Backend**: FastAPI, LangChain, Groq/Gemini, Serper API, Resend.
@@ -68,6 +68,7 @@ https://firereach-autonomous-outreach-engine.onrender.com
 5. Add the necessary Environment Variables.
 
 **Frontend (Netlify):**
+HEAD
 1. Connect your repository to Netlify.
 2. Set the Root Directory to `frontend`.
 3.Set the **Build Command**: 
@@ -76,3 +77,5 @@ https://firereach-autonomous-outreach-engine.onrender.com
 6. Deploy the project.
 
 Your frontend will be available at your Netlify domain after deployment.
+
+
