@@ -72,9 +72,7 @@ https://firereach-autonomous-outreach-engine.onrender.com
 2. Set the Root Directory to `frontend`.
 3.Set the **Build Command**: 
 4. Set the **Publish Directory**:
-
 5. Add the following **Environment Variable** in Netlify:
-
 6. Deploy the project.
 
 Your frontend will be available at your Netlify domain after deployment.
