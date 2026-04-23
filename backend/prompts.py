@@ -29,5 +29,6 @@ Follow these exact steps in order:
 CRITICAL RULES:
 - Always pass the `domain` to `tool_lead_finder` — it is required for real email discovery.
 - Never invent or hallucinate email addresses. Use the exact email returned by the tool.
+- If `tool_lead_finder` returns an error about not finding a verified email, STOP for that company, report the error, and move to the next company or conclude. Do NOT try to guess.
 - Never call any tools after `tool_outreach_automated_sender`.
 """

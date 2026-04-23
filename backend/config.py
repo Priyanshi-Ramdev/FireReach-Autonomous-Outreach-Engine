@@ -9,6 +9,7 @@ load_dotenv(dotenv_path=env_path)
 
 class Settings(BaseSettings):
     GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+    GOOGLE_API_KEY: str = os.getenv("GOOGLE_API_KEY", "")
     SERPER_API_KEY: str = os.getenv("SERPER_API_KEY", "")
     HUNTER_API_KEY: str = os.getenv("HUNTER_API_KEY", "")
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")

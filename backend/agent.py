@@ -1,38 +1,39 @@
 from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_groq import ChatGroq
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.callbacks import AsyncCallbackHandler
 from prompts import SYSTEM_PROMPT
 from tools import (
     tool_signal_harvester,
     tool_research_analyst,
     tool_outreach_automated_sender,
     tool_company_finder,
-    tool_lead_finder,
-    clear_run_state,
-    run_state
+    tool_lead_finder
 )
+from database import current_job_id, update_job_state, get_job_state, get_workspace_settings
 from config import settings
+from websocket_manager import manager
+from llm_factory import get_llm, AgentThoughtHandler
 import json
+import asyncio
 
-
-def run_firereach_agent(icp: str, company: str = None, email: str = None):
-    clear_run_state()
-
-    api_key = settings.GROQ_API_KEY
-    if not api_key:
-        print("MOCK MODE: No GROQ_API_KEY found, running mock agent...")
-        tool_signal_harvester.invoke({"company": company or "Mock Company"})
-        tool_research_analyst.invoke({"signals": str(run_state["signals"]), "icp": icp})
-        tool_outreach_automated_sender.invoke({
-            "signals": str(run_state["signals"]),
-            "icp": icp,
-            "company": company or "Mock Company",
-            "email_address": email or "mock@example.com"
-        })
-        return run_state
-
-    # Initialize LLM
-    llm = ChatGroq(temperature=0, groq_api_key=api_key, model_name="llama-3.3-70b-versatile")
+async def run_firereach_agent(job_id: str, icp: str, company: str = None, email: str = None):
+    # Set the ContextVar for this async run
+    current_job_id.set(job_id)
+    
+    await update_job_state(job_id, {"status": "processing"})
+    
+    # Load dynamic workspace settings
+    ws_settings = await get_workspace_settings()
+    llm, _ = await get_llm(ws_settings) # We use the fallback-enabled chain for the agent loop
+    
+    if not llm:
+        print("MOCK MODE: No API Keys found, running mock agent...")
+        await asyncio.sleep(2)
+        await update_job_state(job_id, {"status": "pending_approval", "email_draft": "Subject: Growth at [Company]\n\nHi [Name],\n\nI noticed [Signal]. Let's chat."})
+        await manager.send_updates(job_id, {"event": "job_update", "updates": {"status": "pending_approval"}})
+        return
 
     tools = [
         tool_company_finder,
@@ -49,9 +50,15 @@ def run_firereach_agent(icp: str, company: str = None, email: str = None):
     ])
 
     agent = create_tool_calling_agent(llm, tools, prompt)
-    agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True, max_iterations=15)
+    agent_executor = AgentExecutor(
+        agent=agent, 
+        tools=tools, 
+        verbose=True, 
+        max_iterations=15,
+        callbacks=[AgentThoughtHandler(job_id)]
+    )
 
-    # Build the input — ICP is always required; company and email are optional
+    # Build the input
     input_parts = [f"ICP: '{icp}'"]
     if company:
         input_parts.append(f"Company: {company}")
@@ -61,12 +68,12 @@ def run_firereach_agent(icp: str, company: str = None, email: str = None):
     input_text = f"Execute the outreach workflow. Details: {', '.join(input_parts)}."
 
     try:
-        agent_executor.invoke({"input": input_text})
+        await agent_executor.ainvoke({"input": input_text})
     except Exception as e:
         import traceback
-        import json
         with open("error_trace.json", "w") as f:
             json.dump({"trace": traceback.format_exc(), "error": str(e)}, f)
         print(f"Agent execution encountered an error: {e}")
+        await update_job_state(job_id, {"status": "failed"})
+        await manager.send_updates(job_id, {"event": "job_update", "updates": {"status": "failed", "error": str(e)}})
 
-    return run_state
